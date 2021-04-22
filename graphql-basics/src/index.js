@@ -14,7 +14,7 @@ const resolvers = {
     hello: () => {
       return 'This is my first Query!';
     },
-    name: () => 'Pako Herrera'
+    name: () => 'Pako Herrera Hernandez'
   }
 }
 
@@ -24,5 +24,5 @@ const server = new GraphQLServer({
 });
 
 server.start(() => {
-  console.log('🚀 The server us up')
+  console.log('🚀 The server us up in http://localhost:4000')
 });
