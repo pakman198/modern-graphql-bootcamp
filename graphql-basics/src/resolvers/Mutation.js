@@ -22,6 +22,37 @@ const Mutation = {
 
     return user;
   },
+  updateUser(parent, args, { db }, info) {
+
+    console.log({ args })
+    const { id, userInput } = args;
+    const user = db.users.find(user => user.id === id)
+
+    if(!user) {
+      throw new Error('User not found');
+    }
+
+    if(typeof userInput.email === 'string') {
+      const isEmailTaken = db.users.some(user => user.email === userInput.email);
+
+      if(isEmailTaken) {
+        throw new Error('Email already registered');
+      }
+
+      user.email = userInput.email;
+    }
+
+    if(typeof userInput.name === 'string') {
+      user.name = userInput.name;
+    }
+
+    if(typeof userInput.age !== undefined) {
+      user.age = userInput.age;
+    }
+
+    return user;
+    
+  },
   deleteUser(parent, args, { db }, info) {
     const userIndex = db.users.findIndex(user => user.id === args.user);
 
@@ -65,6 +96,28 @@ const Mutation = {
 
     return post;
   },
+  updatePost(parent, args, { db }, info) {
+    const { id, postInput } = args;
+    const post = db.posts.find(post => post.id === id)
+
+    if(!post) {
+      throw new Error('Post not found');
+    }
+
+    if(typeof postInput.title === 'string') {
+      post.title = postInput.title;
+    }
+
+    if(typeof postInput.body === 'string') {
+      post.body = postInput.body;
+    }
+
+    post.published = !!postInput.published;
+    
+
+    return post;
+    
+  },
   deletePost(parent, args, { db }, info) {
     const postIndex = db.posts.findIndex(post => post.id === args.postId);
 
@@ -102,6 +155,21 @@ const Mutation = {
 
     return comment;
 
+  },
+  updateComment(parent, args, { db }, info) {
+    const { id, commentInput } = args;
+    const comment = db.comments.find(comment => comment.id === id)
+
+    if(!comment) {
+      throw new Error('Comment not found');
+    }
+
+    if(typeof commentInput.text === 'string') {
+      comment.text = commentInput.text;
+    }
+    
+    return comment;
+    
   },
   deleteComment(parent, args, { db }, info) {
     const commentIndex = db.comments.findIndex(comment => comment.id === args.commentId);
