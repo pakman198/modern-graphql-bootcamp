@@ -5,14 +5,20 @@ const Query = {
 
     return "hoLa"
   },
-  me() {
-    return {
-      id: '100',
-      name: 'Pacquiao'
-    }
+  async user(parent, args, { prisma }, info) {
+    const { userId } = args;
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId
+      }
+    });
+
+    return user;
   },
-  hello() {
-    return "HELLO PRISMA"
+  async users(parent, args, { prisma }, info) {
+    const users = await prisma.user.findMany();
+
+    return users;
   }
 }
 
