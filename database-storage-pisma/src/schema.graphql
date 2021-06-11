@@ -2,18 +2,32 @@ type Query {
   context: String!
   user(userId: Int!): User!
   users: [User!]!
+  post(postId: Int!): Post!
+  posts: [Post!]!
 }
 
 type Mutation {
   createUser(data: newUserInput): User!
   updateUser(data: updateUserInput!): User!
   deleteUser(userId: Int!): User!
+  createPost(data: newPostInput): Post! 
+  updatePost(postId: Int!, data: updatePostInput): Post!
+  deletePost(postId: Int!): Post!
 }
 
 type User {
   id: Int!
 	name: String!
   email: String
+  posts: [Post!]!
+}
+
+type Post {
+  id: Int!
+  title: String!
+  body: String!
+  published: Boolean!
+  author: User!
 }
 
 input newUserInput {
@@ -25,4 +39,17 @@ input updateUserInput {
   id: Int!
   name: String
   email: String
+}
+
+input newPostInput {
+  title: String!
+  body: String!
+  published: Boolean
+  author: Int!
+}
+
+input updatePostInput {
+  title: String
+  body: String
+  published: Boolean
 }
