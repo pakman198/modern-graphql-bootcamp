@@ -20,14 +20,29 @@ const Mutation = {
     return updatedUser;
   },
   async deleteUser(parent, { userId }, { prisma }, info) {
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if(!userExists) {
+      throw new Error('User not found');
+    }
+
     // at this moment prisma 2 doesnt support cascade delete so we need to delete relations manually
-    const posts = await prisma.post.deleteMany({
+    const deleteComments = prisma.comment.deleteMany({
       where: { userId }
     });
 
-    const user = await prisma.user.delete({
-      where: { id: userId },
+    const deletePosts = prisma.post.deleteMany({
+      where: { userId }
+    });
+
+    const deleteUser = prisma.user.delete({
+      where: { id: userId }
     })
+
+    // The transaction runs synchronously so deleteUser must run last.
+    const [deletedComments, deletedPosts, user] = await prisma.$transaction([deleteComments, deletePosts, deleteUser]);
 
     return user;
   },
@@ -54,8 +69,6 @@ const Mutation = {
         author: true
       }
     });
-
-    console.log({ post })
 
     return post;
   },
@@ -87,11 +100,101 @@ const Mutation = {
     return post;
   },
   async deletePost(parent, { postId }, { prisma }, info) {
-    const post = await prisma.post.delete({
+    const postExists = await prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if(!postExists) {
+      throw new Error('Post not found');
+    }
+
+    const comments = prisma.comment.deleteMany({
+      where: { postId },
+    })
+
+    const post = prisma.post.delete({
       where: { id: postId },
     })
 
-    return post;
+    const  [deletedComments, deletedPost] = await prisma.$transaction([comments, post]);
+
+    return deletedPost;
+  },
+  async createComment(parent, { data }, { prisma }, info) {
+    const { post, author, text } = data;
+    const userExists = await prisma.user.findUnique({
+      where: { id: author }
+    });
+
+    const postExists = await prisma.post.findUnique({
+      where: { id: post }
+    });
+
+    console.log({ postExists })
+
+    if(!userExists || !postExists || !postExists.published) {
+      throw new Error('User or Post not found');
+    }
+
+    const comment = await prisma.comment.create({
+      data: {
+        text,
+        date: new Date(),
+        author: {
+          connect: { id: author }
+        },
+        post: {
+          connect: { id: post }
+        }
+      },
+      include: {
+        author: true,
+        post: true
+      }
+    });
+
+    return comment;
+  },
+  async updateComment(parent, { commentId, text }, { prisma }, info) {
+    const commentExists = await prisma.comment.findUnique({
+      where: { id: commentId }
+    });
+
+    if(!commentExists) {
+      throw new Error('Comment not found')
+    }
+
+    const updatedComment = await prisma.comment.update({
+      where: {
+        id: commentId
+      },
+      data: { text },
+      include: {
+        post: true,
+        author: true
+      }
+    });
+
+    return updatedComment;
+  },
+  async deleteComment(parent, { commentId }, { prisma }, info) {
+    const commentExists = await prisma.comment.findUnique({
+      where: { id: commentId }
+    });
+
+    if(!commentExists) {
+      throw new Error('Comment not found');
+    }
+
+    const comment = await prisma.comment.delete({
+      where: { id: commentId },
+      include: {
+        post: true,
+        author: true
+      }
+    })
+
+    return comment;
   },
 }
 
