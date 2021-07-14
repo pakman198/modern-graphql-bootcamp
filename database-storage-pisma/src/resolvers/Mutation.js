@@ -46,7 +46,7 @@ const Mutation = {
 
     return user;
   },
-  async createPost(parent, { data }, { prisma }, info) {
+  async createPost(parent, { data }, { prisma, pubsub }, info) {
     const { author, title, body, published } = data;
     const userExists = await prisma.user.findUnique({
       where: { id: author }
@@ -69,6 +69,13 @@ const Mutation = {
         author: true
       }
     });
+
+    const payload = {
+      mutation: 'CREATE',
+      data: post
+    }
+
+    pubsub.publish('POST_SUBSCRIPTION', { post: payload })
 
     return post;
   },
@@ -120,7 +127,7 @@ const Mutation = {
 
     return deletedPost;
   },
-  async createComment(parent, { data }, { prisma }, info) {
+  async createComment(parent, { data }, { prisma, pubsub }, info) {
     const { post, author, text } = data;
     const userExists = await prisma.user.findUnique({
       where: { id: author }
@@ -129,8 +136,6 @@ const Mutation = {
     const postExists = await prisma.post.findUnique({
       where: { id: post }
     });
-
-    console.log({ postExists })
 
     if(!userExists || !postExists || !postExists.published) {
       throw new Error('User or Post not found');
@@ -152,6 +157,13 @@ const Mutation = {
         post: true
       }
     });
+
+    const payload = {
+      mutation: 'CREATE',
+      data: comment
+    }
+
+    pubsub.publish('COMMENT_SUBSCRIPTION', { comment: payload })
 
     return comment;
   },
