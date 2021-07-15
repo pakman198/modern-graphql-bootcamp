@@ -1,10 +1,42 @@
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
+const SECRET = "some_random_string"
+
 const Mutation = {
+  async login(parent, { user, password }, { prisma }, info) {
+    const userExists = await prisma.user.findUnique({
+      where: { email: user }
+    });
+
+    if(!userExists) {
+      throw new Error('Unable to login');
+    }
+
+    const isValidPassword = await bcrypt.compare(password, userExists.password);
+
+    if(!isValidPassword) {
+      throw new Error('Unable to login');
+    }
+
+    return {
+      user: userExists,
+      token: jwt.sign({ userId: user.id }, SECRET)
+    };
+
+  },
   async createUser(parent, args, ctx, info) {
-    const { name, email } = args.data;
+    const { name, email, password } = args.data;
+
+    const hashedPwd = await bcrypt.hash(password, 10);
+
+    console.log({ hashedPwd });
+
     const newUser = await ctx.prisma.user.create({
       data: {
         name,
-        email
+        email,
+        password: hashedPwd
       }
     });
   
