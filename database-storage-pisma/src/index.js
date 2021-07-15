@@ -15,9 +15,12 @@ const server = new GraphQLServer({
     Mutation,
     Subscription
   },
-  context: {
-    prisma,
-    pubsub
+  context(request) {
+    return {
+      request,
+      prisma,
+      pubsub
+    }
   }
 });
 

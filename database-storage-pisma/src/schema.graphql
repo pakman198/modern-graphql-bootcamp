@@ -70,7 +70,6 @@ input newPostInput {
   title: String!
   body: String!
   published: Boolean
-  author: Int!
 }
 
 input updatePostInput {

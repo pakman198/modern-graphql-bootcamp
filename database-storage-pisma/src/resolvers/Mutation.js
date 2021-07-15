@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-const SECRET = "some_random_string"
+import getUserId from '../utils/getUserId';
 
 const Mutation = {
   async login(parent, { user, password }, { prisma }, info) {
@@ -19,9 +19,11 @@ const Mutation = {
       throw new Error('Unable to login');
     }
 
+    console.log({ userExists })
+
     return {
       user: userExists,
-      token: jwt.sign({ userId: user.id }, SECRET)
+      token: jwt.sign({ userId: userExists.id }, process.env.SECRET)
     };
 
   },
@@ -78,10 +80,12 @@ const Mutation = {
 
     return user;
   },
-  async createPost(parent, { data }, { prisma, pubsub }, info) {
-    const { author, title, body, published } = data;
+  async createPost(parent, { data }, { prisma, pubsub, request }, info) {
+    const userId = getUserId(request);
+    
+    const { title, body, published } = data;
     const userExists = await prisma.user.findUnique({
-      where: { id: author }
+      where: { id: userId }
     });
 
     if(!userExists) {
@@ -94,7 +98,7 @@ const Mutation = {
         body,
         published: !!published,
         author: {
-          connect: { id: author }
+          connect: { id: userId }
         }
       },
       include: {
