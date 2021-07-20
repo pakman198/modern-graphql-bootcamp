@@ -4,6 +4,11 @@ import jwt from 'jsonwebtoken';
 import getUserId from '../utils/getUserId';
 
 const Mutation = {
+  async generatePwdHash(parent, { password }, { prisma }, info){
+    const hashedPwd = await bcrypt.hash(password, 10);
+
+    return hashedPwd
+  },
   async login(parent, { user, password }, { prisma }, info) {
     const userExists = await prisma.user.findUnique({
       where: { email: user }
@@ -44,16 +49,34 @@ const Mutation = {
   
     return newUser;
   },
-  async updateUser(parent, { data }, { prisma }, info) {
-    const { id, name, email } = data;
+  async updateUser(parent, { data }, { prisma, request }, info) {
+    const userId = getUserId(request);
+
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if(!userExists) {
+      throw new Error('User not found');
+    }
+
+    const updated = { ...data };
+
+    if (data.password) {
+      const hashedPwd = await bcrypt.hash(data.password, 10);
+      updated.password = hashedPwd;
+    }
+
     const updatedUser = await prisma.user.update({
-      where: { id },
-      data: { name, email },
+      where: { id: userId },
+      data: updated,
     });
 
     return updatedUser;
   },
-  async deleteUser(parent, { userId }, { prisma }, info) {
+  async deleteUser(parent, args, { prisma, request }, info) {
+    const userId = getUserId(request);
+    
     const userExists = await prisma.user.findUnique({
       where: { id: userId }
     });
@@ -115,13 +138,17 @@ const Mutation = {
 
     return post;
   },
-  async updatePost(parent, { postId, data }, { prisma }, info) {
+  async updatePost(parent, { postId, data }, { prisma, request }, info) {
+    const userId = getUserId(request);
     
     // This is not necessary, but it gives you a better idea of why the query will fail
     // If i didn't add this validation, the update query will just display some prisma error
     // that will be hard to present to the user
-    const postExists = await prisma.post.findUnique({
-      where: { id: postId }
+    const postExists = await prisma.post.findFirst({
+      where: { 
+        id: postId,
+        userId
+      }
     });
 
     if(!postExists) {
@@ -142,9 +169,13 @@ const Mutation = {
 
     return post;
   },
-  async deletePost(parent, { postId }, { prisma }, info) {
-    const postExists = await prisma.post.findUnique({
-      where: { id: postId }
+  async deletePost(parent, { postId }, { prisma, request }, info) {
+    const userId = getUserId(request);
+    const postExists = await prisma.post.findFirst({
+      where: { 
+        id: postId,
+        userId
+      }
     });
 
     if(!postExists) {
@@ -163,18 +194,19 @@ const Mutation = {
 
     return deletedPost;
   },
-  async createComment(parent, { data }, { prisma, pubsub }, info) {
-    const { post, author, text } = data;
-    const userExists = await prisma.user.findUnique({
-      where: { id: author }
+  async createComment(parent, { data }, { prisma, pubsub, request }, info) {
+    const userId = getUserId(request);
+    const { post, text } = data;
+
+    const postExists = await prisma.post.findFirst({
+      where: { 
+        id: post,
+        userId
+      }
     });
 
-    const postExists = await prisma.post.findUnique({
-      where: { id: post }
-    });
-
-    if(!userExists || !postExists || !postExists.published) {
-      throw new Error('User or Post not found');
+    if(!postExists || !postExists.published) {
+      throw new Error('Post not found');
     }
 
     const comment = await prisma.comment.create({
@@ -182,7 +214,7 @@ const Mutation = {
         text,
         date: new Date(),
         author: {
-          connect: { id: author }
+          connect: { id: userId }
         },
         post: {
           connect: { id: post }
@@ -203,9 +235,13 @@ const Mutation = {
 
     return comment;
   },
-  async updateComment(parent, { commentId, text }, { prisma }, info) {
-    const commentExists = await prisma.comment.findUnique({
-      where: { id: commentId }
+  async updateComment(parent, { commentId, text }, { prisma, request }, info) {
+    const userId = getUserId(request);
+    const commentExists = await prisma.comment.findFirst({
+      where: { 
+        id: commentId,
+        userId
+      }
     });
 
     if(!commentExists) {
@@ -225,9 +261,13 @@ const Mutation = {
 
     return updatedComment;
   },
-  async deleteComment(parent, { commentId }, { prisma }, info) {
-    const commentExists = await prisma.comment.findUnique({
-      where: { id: commentId }
+  async deleteComment(parent, { commentId }, { prisma, request }, info) {
+    const userId = getUserId(request);
+    const commentExists = await prisma.comment.findFirst({
+      where: { 
+        id: commentId,
+        userId
+      }
     });
 
     if(!commentExists) {

@@ -9,10 +9,11 @@ type Query {
 }
 
 type Mutation {
+  generatePwdHash(password: String!): String!
   login(user: String!, password: String!): LoginPayload!
   createUser(data: newUserInput): User!
   updateUser(data: updateUserInput!): User!
-  deleteUser(userId: Int!): User!
+  deleteUser: User!
   createPost(data: newPostInput): Post! 
   updatePost(postId: Int!, data: updatePostInput): Post!
   deletePost(postId: Int!): Post!
@@ -32,8 +33,8 @@ type User {
 	name: String!
   email: String!
   password: String!
-  posts: [Post!]!
-  comments: [Comment!]!
+  posts: [Post]!
+  comments: [Comment]!
 }
 
 type Post {
@@ -60,7 +61,6 @@ input newUserInput {
 }
 
 input updateUserInput {
-  id: Int!
   name: String
   email: String
   password: String
@@ -80,7 +80,6 @@ input updatePostInput {
 
 input newCommentInput {
   text: String!
-  author: Int!
   post: Int!
 }
 
