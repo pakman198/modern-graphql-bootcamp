@@ -1,9 +1,12 @@
 type Query {
+  me: User!
   context: String!
   user(userId: Int!): User!
   users: [User!]!
   post(postId: Int!): Post!
-  posts: [Post!]!
+  posts(query: String): [Post]!
+  allPosts: [Post!]!
+  myPosts(query: String): [Post]!
   comment(commentId: Int!): Comment!
   comments: [Comment!]!
 }

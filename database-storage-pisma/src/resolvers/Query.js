@@ -1,8 +1,29 @@
+import getUserId from '../utils/getUserId';
+
 const Query = {
   context(parent, args, ctx, info) {
     const { user } = ctx.prisma;
 
     return "hoLa"
+  },
+  async me(parent, args, { prisma , request }, info) {
+    const userId = getUserId(request);
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId
+      },
+      include: { 
+        posts: true,
+        comments: true
+      }
+    });
+
+    if(!user) {
+      throw new Error('User not found')
+    }
+
+    return user;
   },
   async user(parent, args, { prisma }, info) {
     const { userId } = args;
@@ -32,11 +53,17 @@ const Query = {
 
     return users;
   },
-  async post(parent, args, { prisma }, info) {
+  async post(parent, args, { prisma, request }, info) {
+    const userId = getUserId(request, false);
     const { postId } = args;
-    const post = await prisma.post.findUnique({
+
+    const post = await prisma.post.findFirst({
       where: {
-        id: postId
+        id: postId,
+        OR: [
+          { published: true },
+          { userId }
+        ]
       },
       include: {
         author: true,
@@ -54,8 +81,79 @@ const Query = {
 
     return post;
   },
-  async posts(parent, args, { prisma }, info) {
+  async allPosts(parent, args, { prisma }, info) {
     const posts = await prisma.post.findMany({
+      include: {
+        author: true,
+        comments: {
+          include: {
+            author: true
+          }
+        }
+      }
+    });
+
+    return posts;
+  },
+  async myPosts(parent, { query }, { prisma, request }, info) {
+    const userId = getUserId(request);
+    let condition = { userId };
+
+    if (query) {
+      condition = {
+        userId,
+        OR: [
+          {
+            title: { 
+              contains: query,
+              mode: 'insensitive'
+            }
+          },
+          {
+            body: { 
+              contains: query,
+              mode: 'insensitive'
+            }
+          }
+        ]
+      };
+    }
+
+    console.log({ query })
+
+    const posts = await prisma.post.findMany({
+      where: condition,
+      include: {
+        author: true,
+        comments: {
+          include: {
+            author: true
+          }
+        }
+      }
+    });
+
+    return posts;
+  },
+  async posts(parent, { query }, { prisma }, info) {
+    const posts = await prisma.post.findMany({
+      where: {
+        published: true,
+        OR: [
+          {
+            title: { 
+              contains: query,
+              mode: 'insensitive'
+            }
+          },
+          {
+            body: { 
+              contains: query,
+              mode: 'insensitive'
+            }
+          }
+        ]
+      },
       include: {
         author: true,
         comments: {
