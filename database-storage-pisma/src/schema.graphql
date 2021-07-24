@@ -34,8 +34,8 @@ type Subscription {
 type User {
   id: Int!
 	name: String!
-  email: String!
-  password: String!
+  email: String
+  password: String
   posts: [Post]!
   comments: [Comment]!
 }
