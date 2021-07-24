@@ -1,13 +1,14 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 
 import getUserId from '../utils/getUserId';
+import generateToken from '../utils/generateToken';
+import hashPassword from '../utils/hashPassword';
 
 const Mutation = {
-  async generatePwdHash(parent, { password }, { prisma }, info){
-    const hashedPwd = await bcrypt.hash(password, 10);
-
-    return hashedPwd
+  async generatePwdHash(parent, { password }, { prisma }, info) {
+    const pwd = await hashPassword(password);
+    
+    return pwd;
   },
   async login(parent, { user, password }, { prisma }, info) {
     const userExists = await prisma.user.findUnique({
@@ -28,14 +29,14 @@ const Mutation = {
 
     return {
       user: userExists,
-      token: jwt.sign({ userId: userExists.id }, process.env.SECRET)
+      token: generateToken(userExists.id)
     };
 
   },
   async createUser(parent, args, ctx, info) {
     const { name, email, password } = args.data;
 
-    const hashedPwd = await bcrypt.hash(password, 10);
+    const hashedPwd = await hashPassword(password);
 
     console.log({ hashedPwd });
 
@@ -62,9 +63,8 @@ const Mutation = {
 
     const updated = { ...data };
 
-    if (data.password) {
-      const hashedPwd = await bcrypt.hash(data.password, 10);
-      updated.password = hashedPwd;
+    if (typeof data.password === 'string') {
+      updated.password = await hashPassword(data.password);
     }
 
     const updatedUser = await prisma.user.update({
