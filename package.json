@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/index.js --ext js,graphql --exec babel-node",
-    "build": "",
+    "start": "nodemon public/index.js",
+    "build": "babel src --out-dir public --copy-files",
     "dev": "nodemon src/index.js --ext js,graphql --exec babel-node"
   },
   "keywords": [],
