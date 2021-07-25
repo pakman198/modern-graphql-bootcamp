@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/index.js --ext js,graphql --exec babel-node",
+    "build": "",
     "dev": "nodemon src/index.js --ext js,graphql --exec babel-node"
   },
   "keywords": [],
