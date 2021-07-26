@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node public/index.js",
     "build": "babel src --out-dir public --copy-files",
-    "dev": "nodemon src/index.js --ext js,graphql --exec babel-node",
-    "heroku-postbuild": "prisma generate"
+    "dev": "nodemon src/index.js --ext js,graphql --exec babel-node"
   },
   "keywords": [],
   "author": "",
