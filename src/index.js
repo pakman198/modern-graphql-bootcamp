@@ -1,4 +1,3 @@
-require('dotenv').config({ path: '.env'})
 import { GraphQLServer, PubSub } from "graphql-yoga";
 import { PrismaClient } from "@prisma/client";
 

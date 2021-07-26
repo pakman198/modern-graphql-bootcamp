@@ -1,4 +1,3 @@
-require('dotenv').config({ path: '.env'})
 import jwt from 'jsonwebtoken';
 
 const generateToken = (userId) => {
