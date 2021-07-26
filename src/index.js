@@ -1,3 +1,4 @@
+require('dotenv').config({ path: '.env'})
 import { GraphQLServer, PubSub } from "graphql-yoga";
 import { PrismaClient } from "@prisma/client";
 
@@ -26,9 +27,11 @@ const server = new GraphQLServer({
   }
 });
 
+const PORT = process.env.PORT || 4000;
+
 server.start({
-  port: process.env.PORT || 4000,
+  port: PORT,
   endpoint: '/gql'
 }, () => {
-	console.log("🚀 The server us up in http://localhost:4000");
+	console.log(`🚀 The server us up in http://localhost:${PORT}`);
 });
