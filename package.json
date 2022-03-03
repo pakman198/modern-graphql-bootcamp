@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node public/index.js",
     "build": "babel src --out-dir public --copy-files",
-    "dev": "nodemon src/index.js --ext js,graphql --exec babel-node"
+    "dev": "nodemon src/index.js --ext js,graphql --exec babel-node",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +18,8 @@
     "@babel/node": "^7.14.2",
     "@babel/plugin-transform-runtime": "^7.14.5",
     "@babel/preset-env": "^7.14.2",
+    "jest": "^27.1.0",
+    "jest-mock-extended": "^2.0.2-beta2",
     "nodemon": "^2.0.7"
   },
   "dependencies": {
